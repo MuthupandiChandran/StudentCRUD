@@ -1,0 +1,204 @@
+﻿@model IEnumerable<StudentCRUD.Models.Student>
+
+@{
+    ViewBag.Title = "Index";
+}
+@Html.AntiForgeryToken() <!-- Add this line to include the Anti-Forgery Token -->
+<h2>Index</h2>
+
+@if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info">
+        <strong>Info!</strong>
+        @TempData["InfoMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span>&times;</span>
+        </button>
+    </div>
+}
+else if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <strong>Success!</strong>
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span>&times;</span>
+        </button>
+    </div>
+}
+else if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <strong>Error!</strong>
+        @TempData["ErrorMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span>&times;</span>
+        </button>
+    </div>
+}
+
+@if (TempData["UpdateMessage"] != null)
+{
+    <style>
+        .toast-top-right {
+            top: 30px; /* Adjust this value to move the toast down */
+            right: 0;
+        }
+    </style>
+
+    <script src="~/Scripts/toastr.js"></script>
+    <script src="~/Scripts/toastr.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            toastr.options = {
+                "closeButton": true,
+                "debug": false,
+                "newestOnTop": false,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "preventDuplicates": false,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            };
+            toastr.success("Successfully Updated!!!", "Updated", { timeOut: 5000 });
+        });
+    </script>
+}
+
+<p>
+    @Html.ActionLink("Create New Student", "Create", null, new { @class = "btn btn-primary" })
+</p>
+
+<table class="styled-table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.First().Name)</th>
+            <th>@Html.DisplayNameFor(model => model.First().DOB)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Created_On)</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                    <td>@Html.DisplayFor(modelItem => item.DOB)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Created_On)</td>
+                    <td>
+                        @Html.ActionLink("Edit", "Edit", new { id = item.StudentID }, new { @class = "btn btn-primary" }) &nbsp;&nbsp;&nbsp;
+                        @Html.ActionLink("Details", "Details", new { id = item.StudentID }, new { @class = "btn btn-success" }) &nbsp;&nbsp;&nbsp;
+                        @Html.ActionLink("Delete","Delete",new { id = item.StudentID },new{ @class = "btn btn-danger",onclick = $"confirmDelete('{item.StudentID}'); return false;"})
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4">No students found.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    .styled-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+        .styled-table th,
+        .styled-table td {
+            border: 2px solid black; /* Straight line between columns */
+            padding: 10px;
+            text-align: left;
+        }
+
+        .styled-table th {
+            background-color: #f2f2f2;
+        }
+
+        .styled-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+
+    /* Prevents the cancel button color from changing when clicked */
+    .swal2-cancel-btn {
+        background-color: #d33 !important;
+        color: white;
+    }
+
+        .swal2-cancel-btn:focus {
+            background-color: #d33 !important;
+            color: white;
+            box-shadow: none;
+        }
+
+        .swal2-cancel-btn:hover {
+            background-color: #d33 !important;
+            color: white;
+        }
+</style>
+
+<script type="text/javascript">
+    function confirmDelete(studentID) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to delete this student?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '@Url.Action("DeleteConfirmed", "Student")',
+                    type: 'POST',
+                    data: {
+                        id: studentID,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() // Include token in data
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire(
+                                'Deleted!',
+                                'The student has been deleted.',
+                                'success'
+                            ).then(() => {
+                                location.reload(); // Reload the page to reflect changes
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                response.message,
+                                'error'
+                            );
+                        }
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        Swal.fire(
+                            'Error!',
+                            'There was an error deleting the student.',
+                            'error'
+                        );
+                    }
+                });
+            }
+        });
+    }
+</script>
